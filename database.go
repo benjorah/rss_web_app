@@ -22,22 +22,22 @@ func (algolia *AlgoliaConnection) AddRecords(records []RSSData) (err error) {
 
 }
 
-//SearchRecords searches for entries that matches a particular search string
-func (algolia *AlgoliaConnection) SearchRecords(searchString string) (data []RSSData, err error) {
+//SearchRecords searches for entries in the database that matches a particular search string and returns those entries
+//It returns an error if any error is encountered
+func (algolia *AlgoliaConnection) SearchRecords(searchString string) (records []RSSData, err error) {
 
 	res, err := algolia.index.Search(searchString)
 	if err != nil {
-		return nil, fmt.Errorf("in AlgoliaConnection.SearchRecords : %s", err.Error())
+		return nil, fmt.Errorf("[ERROR] AlgoliaConnection.SearchRecords() : %s", err.Error())
 	}
 
 	var RSSDataSlice []RSSData
 
+	//Puts the result into a slice of RSSData types
 	err = res.UnmarshalHits(&RSSDataSlice)
 	if err != nil {
-		return nil, fmt.Errorf("in AlgoliaConnection.SearchRecords : %s", err.Error())
+		return nil, fmt.Errorf("[ERROR] AlgoliaConnection.SearchRecords() : %s", err.Error())
 	}
-
-	// fmt.Println(contacts)
 
 	return RSSDataSlice, nil
 

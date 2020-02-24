@@ -1,9 +1,14 @@
+//A web app that allows user search a database for RSS feeds matching a particular topic
 package main
 
 import (
-	"fmt"
+	"flag"
 	"log"
 	"net/http"
+	_ "net/http/pprof"
+	"os"
+	"runtime"
+	"runtime/pprof"
 )
 
 const (
@@ -13,7 +18,37 @@ const (
 
 var app App
 
+var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to `file`")
+var memprofile = flag.String("memprofile", "", "write memory profile to `file`")
+
 func main() {
+
+	flag.Parse()
+	if *cpuprofile != "" {
+		f, err := os.Create(*cpuprofile)
+		if err != nil {
+			log.Fatal("could not create CPU profile: ", err)
+		}
+		defer f.Close()
+		if err := pprof.StartCPUProfile(f); err != nil {
+			log.Fatal("could not start CPU profile: ", err)
+		}
+		defer pprof.StopCPUProfile()
+	}
+
+	// ... rest of the program ...
+
+	if *memprofile != "" {
+		f, err := os.Create(*memprofile)
+		if err != nil {
+			log.Fatal("could not create memory profile: ", err)
+		}
+		defer f.Close()
+		runtime.GC() // get up-to-date statistics
+		if err := pprof.WriteHeapProfile(f); err != nil {
+			log.Fatal("could not write memory profile: ", err)
+		}
+	}
 
 	algolia := AlgoliaConnection{}
 
@@ -33,24 +68,31 @@ func main() {
 
 	log.Println("fetching RSS feed...")
 
+	//Fetch the RSS feeds from 2 sources using 2 gouroutines
+
 	go GetRSSFeeds("http://feeds.bbci.co.uk/news/world/rss.xml", rssDataChan, rssErrorChan1)
 	go GetRSSFeeds("http://rss.cnn.com/rss/edition_world.rss", rssDataChan2, rssErrorChan2)
 
+	//Wait for Data and Error
 	rssDataSlice = append(rssDataSlice, <-rssDataChan...)
 
 	rssDataSlice = append(rssDataSlice, <-rssDataChan2...)
 
-	log.Println(rssDataSlice)
+	// erroFromChan1 := (<-rssErrorChan1).Error()
+	// erroFromChan2 := (<-rssErrorChan2).Error()
+
+	// log.Println("[ERROR] main() <= " + erroFromChan1)
+	// log.Println("[ERROR] main() <= " + erroFromChan2)
 
 	err := algolia.AddRecords(rssDataSlice)
 
 	log.Println("Adding RSS records to database...")
 
 	if err != nil {
-		fmt.Println("keys", *algolia.client, goDotEnvVariable("ADMIN_API_KEY"))
-		log.Fatalln("[ERROR] main ->", err.Error())
+		log.Fatalln("[ERROR] main() <=", err.Error())
 	}
 
+	//start the server
 	startServer()
 
 }
@@ -64,4 +106,6 @@ func startServer() {
 	if err != nil {
 		log.Fatalln("ListenAndServe:", err)
 	}
+
+	log.Println("Listening on port 8000")
 }
