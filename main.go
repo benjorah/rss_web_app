@@ -14,7 +14,7 @@ import (
 
 const (
 	api      = "/api/v1/"
-	feedPath = api + "feed/"
+	feedPath = api + "feed"
 )
 
 var app App
@@ -79,7 +79,6 @@ func main() {
 	//Fetch the RSS feeds from 2 sources using 2 gouroutines
 	for _, url := range RSSFeedUrls {
 
-		fmt.Println("outer running with url of " + url)
 		url := url
 
 		//we use an anonymous function to make GetRSSFeeds not depend on channels thereby making it more testable
@@ -110,7 +109,7 @@ func main() {
 
 	}
 
-	fmt.Println(rssDataSlice)
+	// fmt.Println(rssDataSlice)
 
 	// err := algolia.AddRecords(rssDataSlice)
 
