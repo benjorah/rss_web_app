@@ -77,11 +77,11 @@ func main() {
 	log.Println("fetching RSS feed...")
 
 	//Fetch the RSS feeds from 2 sources using 2 gouroutines
-
 	for _, url := range RSSFeedUrls {
 
 		fmt.Println("outer running with url of " + url)
 		url := url
+
 		//we use an anonymous function to make GetRSSFeeds not depend on channels thereby making it more testable
 		go func(inputPathOrString string) {
 
