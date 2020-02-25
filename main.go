@@ -10,6 +10,8 @@ import (
 	"os"
 	"runtime"
 	"runtime/pprof"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
 const (
@@ -66,6 +68,10 @@ func main() {
 
 		&algolia,
 	}
+
+	msql := MsqlConnection{}
+
+	msql.InitDatabseConnection()
 
 	var errorFromChan error = nil
 	rssDataSlice := []RSSData{}
@@ -128,11 +134,12 @@ func startServer() {
 
 	http.HandleFunc(feedPath, app.handleFeedSearch)
 
+	log.Println("Starting server on port 8000...")
+
 	err := http.ListenAndServe("localhost:8000", nil)
 
 	if err != nil {
 		log.Fatalln("ListenAndServe:", err)
 	}
 
-	log.Println("Listening on port 8000")
 }

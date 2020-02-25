@@ -10,6 +10,8 @@ import (
 //It only accepts one method GET as is required by the API
 func (app *App) handleFeedSearch(w http.ResponseWriter, r *http.Request) {
 
+	log.Printf("[INFO] Recived a %s request from %s \n", r.Method, r.Host)
+
 	switch r.Method {
 	case "GET":
 		searchParam, ok := r.URL.Query()["search"]
