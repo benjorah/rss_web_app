@@ -4,21 +4,17 @@ import "time"
 
 //RSSData defines the internal structural representatation for an individual RSS Feed Item
 type RSSData struct {
-	Title string `json:"title"`
-
-	Description string `json:"description"`
-
-	Link string `json:"link"`
-
-	CreatedAt *time.Time `json:"created_at"`
+	Title       string     `json:"title"`
+	Description string     `json:"description"`
+	Link        string     `json:"link"`
+	CreatedAt   *time.Time `json:"created_at"`
 }
 
 //HTTPResponse defines the internal structural representatation for a http response object (success)
 type HTTPResponse struct {
 	Success         bool `json:"success"`
 	ResponsePayload `json:"payload"`
-
-	ResponseError `json:"error"`
+	ResponseError   `json:"error"`
 }
 
 //ResponsePayload defines the structure of a payload  object contained in a http response

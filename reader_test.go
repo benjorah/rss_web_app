@@ -2,102 +2,236 @@ package main
 
 import (
 	"reflect"
-	"sync"
 	"testing"
 
 	"github.com/mmcdole/gofeed"
 )
 
-const sampleFeed = `
-<?xml version="1.0" encoding="UTF-8"?>
-<?xml-stylesheet title="XSL_formatting" type="text/xsl" href="/shared/bsp/xsl/rss/nolsol.xsl"?>
-<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" version="2.0" xmlns:media="http://search.yahoo.com/mrss/">
-    <channel>
-        <title><![CDATA[BBC News - World]]></title>
-        <description><![CDATA[BBC News - World]]></description>
-        <link>https://www.bbc.co.uk/news/</link>
-        <image>
-            <url>https://news.bbcimg.co.uk/nol/shared/img/bbc_news_120x60.gif</url>
-            <title>BBC News - World</title>
-            <link>https://www.bbc.co.uk/news/</link>
-        </image>
-        <generator>RSS for Node</generator>
-        <lastBuildDate>Mon, 24 Feb 2020 22:10:44 GMT</lastBuildDate>
-        <copyright><![CDATA[Copyright: (C) British Broadcasting Corporation, see http://news.bbc.co.uk/2/hi/help/rss/4498287.stm for terms and conditions of reuse.]]></copyright>
-        <language><![CDATA[en-gb]]></language>
-        <ttl>15</ttl>
-        <item>
-            <title><![CDATA[Harvey Weinstein found guilty of rape in watershed case]]></title>
-            <description><![CDATA[The ex-movie mogul is handcuffed and led from court as a judge orders him to jail immediately.]]></description>
-            <link>https://www.bbc.co.uk/news/world-us-canada-51621041</link>
-            <guid isPermaLink="true">https://www.bbc.co.uk/news/world-us-canada-51621041</guid>
-            <pubDate>Mon, 24 Feb 2020 22:10:15 GMT</pubDate>
-        </item>
-        <item>
-            <title><![CDATA[Harvey Weinstein guilty: How the Hollywood giant faced his reckoning]]></title>
-            <description><![CDATA[The judge said this was not a referendum on #MeToo. But at times, the trial felt like one.]]></description>
-            <link>https://www.bbc.co.uk/news/world-us-canada-51451977</link>
-            <guid isPermaLink="true">https://www.bbc.co.uk/news/world-us-canada-51451977</guid>
-            <pubDate>Mon, 24 Feb 2020 18:17:58 GMT</pubDate>
-        </item>
-       
-    </channel>
-</rss>
-`
+/*
 
+	Tests for ReadAndParse() STARTS here
+*/
 func TestReadAndParse(t *testing.T) {
 	type args struct {
 		inputPathOrString string
 	}
 	tests := []struct {
-		name        string
-		args        args
-		wantRssFeed []*gofeed.Item
-		wantErr     bool
-	}{}
+		name            string
+		args            args
+		wantRssFeedItem []*gofeed.Item
+		wantErr         bool
+	}{
+		{
+			name:            "it should return an error and nil if string is empty",
+			args:            args{""},
+			wantRssFeedItem: nil,
+			wantErr:         true,
+		},
+
+		{
+			name:            "it should return an error and znil if string is not of RSS format",
+			args:            args{"This string is not of RSS format so it fails"},
+			wantRssFeedItem: nil,
+			wantErr:         true,
+		},
+
+		{
+			name:            "it should return an error and nil if string is a file path to a non xml file",
+			args:            args{"models.go"},
+			wantRssFeedItem: nil,
+			wantErr:         true,
+		},
+	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			gotRssFeed, err := ReadAndParse(tt.args.inputPathOrString)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ReadAndParse() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(gotRssFeed, tt.wantRssFeed) {
-				t.Errorf("ReadAndParse() = %v, want %v", gotRssFeed, tt.wantRssFeed)
+			if !reflect.DeepEqual(gotRssFeed, tt.wantRssFeedItem) {
+				t.Errorf("ReadAndParse() = %v, want %v", gotRssFeed, tt.wantRssFeedItem)
 			}
 		})
 	}
+
+	//Other tests that won't be convenient as aa table test
+	sampleRSSData := getSampleRSSData()
+	t.Run("It should return the RSSData if the input string contains RSS data", func(t *testing.T) {
+		t.Parallel()
+		gotRssFeed, err := ReadAndParse(sampleFeed)
+		if err != nil {
+			t.Errorf("ReadAndParse() error = %v, wantErr %v", err, nil)
+			return
+		}
+		if !reflect.DeepEqual(gotRssFeed[0].Title, sampleRSSData.Title) {
+			t.Errorf("ReadAndParse() = %v, want %v", *gotRssFeed[0], sampleRSSData)
+		} else if !reflect.DeepEqual(gotRssFeed[0].Description, sampleRSSData.Description) {
+			t.Errorf("ReadAndParse() = %v, want %v", *gotRssFeed[0], sampleRSSData)
+		} else if !reflect.DeepEqual(gotRssFeed[0].Link, sampleRSSData.Link) {
+			t.Errorf("ReadAndParse() = %v, want %v", *gotRssFeed[0], sampleRSSData)
+		} else if !reflect.DeepEqual(gotRssFeed[0].PublishedParsed, sampleRSSData.CreatedAt) {
+			t.Errorf("ReadAndParse() = %v, want %v", *gotRssFeed[0], sampleRSSData)
+		}
+
+	})
+
+	t.Run("It should return the RSSData if input string is a file path to an xml file", func(t *testing.T) {
+		t.Parallel()
+		gotRssFeed, err := ReadAndParse("reader_test_data.xml")
+		if err != nil {
+			t.Errorf("ReadAndParse() error = %v, wantErr %v", err, nil)
+			return
+		}
+		if !reflect.DeepEqual(gotRssFeed[0].Title, sampleRSSData.Title) {
+			t.Errorf("ReadAndParse() = %v, want %v", *gotRssFeed[0], sampleRSSData)
+		} else if !reflect.DeepEqual(gotRssFeed[0].Description, sampleRSSData.Description) {
+			t.Errorf("ReadAndParse() = %v, want %v", *gotRssFeed[0], sampleRSSData)
+		} else if !reflect.DeepEqual(gotRssFeed[0].Link, sampleRSSData.Link) {
+			t.Errorf("ReadAndParse() = %v, want %v", *gotRssFeed[0], sampleRSSData)
+		} else if !reflect.DeepEqual(gotRssFeed[0].PublishedParsed, sampleRSSData.CreatedAt) {
+			t.Errorf("ReadAndParse() = %v, want %v", *gotRssFeed[0], sampleRSSData)
+		}
+
+	})
+
 }
 
 func BenchmarkReadAndParse(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		ReadAndParse(sampleFeed)
 	}
-
 }
 
-func TestTransFormRSSItemToCustomData(t *testing.T) {
+/*
+
+	Tests for ReadAndParse() ENDS here
+*/
+
+/*
+
+	Tests for GetRSSFeeds() STARTS here
+*/
+func TestGetRSSFeeds(t *testing.T) {
 	type args struct {
-		feed     *gofeed.Item
-		wg       *sync.WaitGroup
-		dataChan chan<- RSSData
+		inputPathOrString string
 	}
 	tests := []struct {
-		name string
-		args args
+		name     string
+		args     args
+		wantData []RSSData
+		wantErr  bool
 	}{
-		// TODO: Add test cases.
+		{
+			name:     "it should return an error and zero value slice if string is empty",
+			args:     args{""},
+			wantData: nil,
+			wantErr:  true,
+		},
+
+		{
+			name:     "it should return an error and zero value slice if string is not of RSS format",
+			args:     args{"This string is not of RSS format so it fails"},
+			wantData: nil,
+			wantErr:  true,
+		},
+
+		{
+			name:     "it should return an error and zero value slice if string is a file path to a non xml file",
+			args:     args{"models.go"},
+			wantData: nil,
+			wantErr:  true,
+		},
+
+		{
+			name:     "It should return the RSSData slice if input string is a file path to an xml file",
+			args:     args{"reader_test_data.xml"},
+			wantData: getSampleRSSDataSlice(),
+			wantErr:  false,
+		},
+
+		{
+			name:     "It should return the RSSData slice if the input string contains RSS data",
+			args:     args{sampleFeed},
+			wantData: getSampleRSSDataSlice(),
+			wantErr:  false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			TransFormRSSItemToCustomData(tt.args.feed, tt.args.wg, tt.args.dataChan)
+			gotData, err := GetRSSFeeds(tt.args.inputPathOrString)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetRSSFeeds() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(gotData, tt.wantData) {
+				t.Errorf("GetRSSFeeds() = %v, want %v", gotData, tt.wantData)
+			}
 		})
 	}
 }
 
-//TODO
-// func BenchmarkTransFormRSSItemToCustomData(b *testing.B) {
-// 	for i := 0; i < b.N; i++ {
-// 		ReadAndParse(sampleFeed)
-// 	}
-// }
+func BenchmarkGetRSSFeeds(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		GetRSSFeeds(sampleFeed)
+	}
+}
+
+/*
+
+	Tests for GetRSSFeeds() ENDS here
+*/
+
+/*
+
+	Tests for TransFormRSSItemToCustomData() STARTS here
+*/
+func TestTransFormRSSItemToCustomData(t *testing.T) {
+	type args struct {
+		feedItem *gofeed.Item
+	}
+	tests := []struct {
+		name     string
+		args     args
+		wantData RSSData
+		wantErr  bool
+	}{
+		{
+			"It should return the transformed data",
+			args{getSampleGoFeedItem()},
+			getSampleRSSData(),
+			false,
+		},
+
+		{
+			"It should return an error and empty RSSData when the Feed Item is not valid",
+			args{nil},
+			RSSData{},
+			true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotData, err := TransFormRSSItemToCustomData(tt.args.feedItem)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("TransFormRSSItemToCustomData() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(gotData, tt.wantData) {
+				t.Errorf("TransFormRSSItemToCustomData() = %v, want %v", gotData, tt.wantData)
+			}
+		})
+	}
+}
+
+func BenchmarkTransFormRSSItemToCustomData(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		TransFormRSSItemToCustomData(getSampleGoFeedItem())
+	}
+}
+
+/*
+
+	Tests for TransFormRSSItemToCustomData() ENDS here
+*/

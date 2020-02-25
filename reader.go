@@ -17,6 +17,11 @@ import (
 //It returns any error it encounters.
 func ReadAndParse(inputPathOrString string) (rssFeed []*gofeed.Item, err error) {
 
+	if strings.TrimSpace(inputPathOrString) == "" {
+		return nil, fmt.Errorf("[ERROR] ReadAndParse() : the input string should not be empty ")
+
+	}
+
 	var feed *gofeed.Feed
 	var parseError error
 
@@ -51,6 +56,12 @@ func ReadAndParse(inputPathOrString string) (rssFeed []*gofeed.Item, err error) 
 
 	}
 
+	if len(feed.Items) == 0 {
+
+		return nil, fmt.Errorf("[ERROR] ReadAndParse() with input string %s : the input string is not of RSS format", inputPathOrString)
+
+	}
+
 	return feed.Items, err
 
 }
@@ -61,6 +72,11 @@ func ReadAndParse(inputPathOrString string) (rssFeed []*gofeed.Item, err error) 
 //and then transFormRSSFeedToCustomData() to  transfrom the feed to the appropriate type.
 //It communicates through channels and is appropriate for running in a gouroutine
 func GetRSSFeeds(inputPathOrString string) (data []RSSData, err error) {
+
+	if strings.TrimSpace(inputPathOrString) == "" {
+		return nil, fmt.Errorf("[ERROR] GetRSSFeeds() : the input string should not be empty ")
+
+	}
 
 	innerWaitGroup := &sync.WaitGroup{}
 	RSSDataSlice := []RSSData{}
@@ -74,8 +90,9 @@ func GetRSSFeeds(inputPathOrString string) (data []RSSData, err error) {
 
 	}
 
-	//channel for communicating with transFormRSSFeedToCustomData()
+	//channel for communicating with transFormRSSFeedToCustomData() and it's error
 	transformedDataChan := make(chan RSSData)
+	transformedErrorChan := make(chan error)
 
 	//loop through each item in the feed and start a goroutine to transform each on
 	//using a goroutine allows multipls items to be transformed at a time rather than serially
@@ -86,7 +103,10 @@ func GetRSSFeeds(inputPathOrString string) (data []RSSData, err error) {
 		//we use an anonymous function to make TransFormRSSItemToCustomData not depend on channels thereby making it more testable
 		go func(feedItem *gofeed.Item, wg *sync.WaitGroup, dataChan chan<- RSSData) {
 
-			transformedDataChan <- TransFormRSSItemToCustomData(feedItem)
+			transformedData, err := TransFormRSSItemToCustomData(feedItem)
+
+			transformedDataChan <- transformedData
+			transformedErrorChan <- err
 
 			//complete this goroutine
 			wg.Done()
@@ -94,18 +114,31 @@ func GetRSSFeeds(inputPathOrString string) (data []RSSData, err error) {
 		}(element, innerWaitGroup, transformedDataChan)
 
 		RSSDataSlice = append(RSSDataSlice, <-transformedDataChan)
+		err = <-transformedErrorChan
+
+		//This error shouldn't stop the function as more feed items can be transformed
+		if err != nil {
+
+			err = fmt.Errorf("[ERROR] GetRSSFeeds() with input string %s <= %s", inputPathOrString, err)
+
+		}
 
 	}
 
 	//wait for all goroutines to complete before sending the data through the channel and exiting
 	innerWaitGroup.Wait()
 
-	return RSSDataSlice, nil
+	return RSSDataSlice, err
 
 }
 
 //TransFormRSSItemToCustomData transforms an RSS items to a custom data type and returns it
-func TransFormRSSItemToCustomData(feedItem *gofeed.Item) (data RSSData) {
+func TransFormRSSItemToCustomData(feedItem *gofeed.Item) (data RSSData, err error) {
+
+	if feedItem == nil {
+
+		return RSSData{}, fmt.Errorf("[ERROR] TransFormRSSItemToCustomData() : FeedItem should not be nil")
+	}
 
 	transformedRSS := RSSData{
 		feedItem.Title,
@@ -114,6 +147,6 @@ func TransFormRSSItemToCustomData(feedItem *gofeed.Item) (data RSSData) {
 		feedItem.PublishedParsed,
 	}
 
-	return transformedRSS
+	return transformedRSS, nil
 
 }
