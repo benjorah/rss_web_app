@@ -86,11 +86,20 @@ func main() {
 
 	rssDataSlice = append(rssDataSlice, <-rssDataChan2...)
 
-	// erroFromChan1 := (<-rssErrorChan1).Error()
-	// erroFromChan2 := (<-rssErrorChan2).Error()
+	erroFromChan1 := <-rssErrorChan1
+	erroFromChan2 := <-rssErrorChan2
 
-	// log.Println("[ERROR] main() <= " + erroFromChan1)
-	// log.Println("[ERROR] main() <= " + erroFromChan2)
+	if erroFromChan1 != nil {
+
+		log.Println("[ERROR] main() <= " + erroFromChan1.Error())
+
+	}
+
+	if erroFromChan2 != nil {
+
+		log.Println("[ERROR] main() <= " + erroFromChan2.Error())
+
+	}
 
 	fmt.Println(rssDataSlice)
 

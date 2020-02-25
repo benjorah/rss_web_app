@@ -84,7 +84,17 @@ func GetRSSFeeds(inputPathOrString string, dataChan chan<- []RSSData, errorChan 
 	for _, element := range feed {
 
 		innerWaitGroup.Add(1)
-		go TransFormRSSItemToCustomData(element, innerWaitGroup, transformedDataChan)
+
+		//we use an anonymous function to make TransFormRSSItemToCustomData not depend on channels thereby making it more testable
+		go func(feedItem *gofeed.Item, wg *sync.WaitGroup, dataChan chan<- RSSData) {
+
+			transformedDataChan <- TransFormRSSItemToCustomData(feedItem)
+
+			//complete this goroutine
+			wg.Done()
+
+		}(element, innerWaitGroup, transformedDataChan)
+
 		RSSDataSlice = append(RSSDataSlice, <-transformedDataChan)
 
 	}
@@ -101,21 +111,16 @@ func GetRSSFeeds(inputPathOrString string, dataChan chan<- []RSSData, errorChan 
 
 }
 
-//TransFormRSSItemToCustomData transforms an RSS items to a custom data type
-//It communicates through channels and is appropriate for running in a gouroutine
-//It also accepts a waitGroup as input parameter for managing the goroutine
-func TransFormRSSItemToCustomData(feed *gofeed.Item, wg *sync.WaitGroup, dataChan chan<- RSSData) {
+//TransFormRSSItemToCustomData transforms an RSS items to a custom data type and returns it
+func TransFormRSSItemToCustomData(feedItem *gofeed.Item) (data RSSData) {
 
 	transformedRSS := RSSData{
-		feed.Title,
-		feed.Description,
-		feed.Link,
-		feed.PublishedParsed,
+		feedItem.Title,
+		feedItem.Description,
+		feedItem.Link,
+		feedItem.PublishedParsed,
 	}
 
-	dataChan <- transformedRSS
-
-	//complete this goroutine
-	wg.Done()
+	return transformedRSS
 
 }
