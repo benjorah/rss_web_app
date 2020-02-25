@@ -3,6 +3,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	_ "net/http/pprof"
@@ -23,6 +24,13 @@ var memprofile = flag.String("memprofile", "", "write memory profile to `file`")
 
 func main() {
 
+	/*
+		This first two if blocks are used for genearting CPU and memory profiles for the application
+		We can generate this by running
+		`go test -cpuprofile cpu.prof2 -memprofile mem.prof2 -bench .` - to generate profiles, and then,
+		`go tool pprof --pdf ~/go/src/rss_web_app/cpu.prof2 > cpu.pdf2` - to convert profiles to pdf
+
+	*/
 	flag.Parse()
 	if *cpuprofile != "" {
 		f, err := os.Create(*cpuprofile)
@@ -36,8 +44,6 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
-	// ... rest of the program ...
-
 	if *memprofile != "" {
 		f, err := os.Create(*memprofile)
 		if err != nil {
@@ -49,7 +55,9 @@ func main() {
 			log.Fatal("could not write memory profile: ", err)
 		}
 	}
+	//Performance profile code ends here
 
+	//program starts
 	algolia := AlgoliaConnection{}
 
 	algolia.InitDatabseConnection()
@@ -84,13 +92,15 @@ func main() {
 	// log.Println("[ERROR] main() <= " + erroFromChan1)
 	// log.Println("[ERROR] main() <= " + erroFromChan2)
 
-	err := algolia.AddRecords(rssDataSlice)
+	fmt.Println(rssDataSlice)
 
-	log.Println("Adding RSS records to database...")
+	// err := algolia.AddRecords(rssDataSlice)
 
-	if err != nil {
-		log.Fatalln("[ERROR] main() <=", err.Error())
-	}
+	// log.Println("Adding RSS records to database...")
+
+	// if err != nil {
+	// 	log.Fatalln("[ERROR] main() <=", err.Error())
+	// }
 
 	//start the server
 	startServer()

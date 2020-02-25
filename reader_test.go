@@ -2,6 +2,7 @@ package main
 
 import (
 	"reflect"
+	"sync"
 	"testing"
 
 	"github.com/mmcdole/gofeed"
@@ -42,7 +43,6 @@ const sampleFeed = `
        
     </channel>
 </rss>
-
 `
 
 func TestReadAndParse(t *testing.T) {
@@ -73,4 +73,31 @@ func BenchmarkReadAndParse(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		ReadAndParse(sampleFeed)
 	}
+
 }
+
+func TestTransFormRSSItemToCustomData(t *testing.T) {
+	type args struct {
+		feed     *gofeed.Item
+		wg       *sync.WaitGroup
+		dataChan chan<- RSSData
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			TransFormRSSItemToCustomData(tt.args.feed, tt.args.wg, tt.args.dataChan)
+		})
+	}
+}
+
+//TODO
+// func BenchmarkTransFormRSSItemToCustomData(b *testing.B) {
+// 	for i := 0; i < b.N; i++ {
+// 		ReadAndParse(sampleFeed)
+// 	}
+// }
