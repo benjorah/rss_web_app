@@ -57,7 +57,7 @@ func main() {
 	}
 	//Performance profile code ends here
 
-	//program starts
+	//main program starts
 	algolia := AlgoliaConnection{}
 
 	algolia.InitDatabseConnection()
@@ -67,37 +67,46 @@ func main() {
 		&algolia,
 	}
 
+	var errorFromChan error = nil
 	rssDataSlice := []RSSData{}
-
 	rssDataChan := make(chan []RSSData)
-	rssDataChan2 := make(chan []RSSData)
-	rssErrorChan1 := make(chan error)
-	rssErrorChan2 := make(chan error)
+	rssErrorChan := make(chan error)
+
+	RSSFeedUrls := [2]string{"http://feeds.bbci.co.uk/news/world/rss.xml", "http://rss.cnn.com/rss/edition_world.rss"}
 
 	log.Println("fetching RSS feed...")
 
 	//Fetch the RSS feeds from 2 sources using 2 gouroutines
 
-	go GetRSSFeeds("http://feeds.bbci.co.uk/news/world/rss.xml", rssDataChan, rssErrorChan1)
-	go GetRSSFeeds("http://rss.cnn.com/rss/edition_world.rss", rssDataChan2, rssErrorChan2)
+	for _, url := range RSSFeedUrls {
 
-	//Wait for Data and Error
-	rssDataSlice = append(rssDataSlice, <-rssDataChan...)
+		fmt.Println("outer running with url of " + url)
+		url := url
+		//we use an anonymous function to make GetRSSFeeds not depend on channels thereby making it more testable
+		go func(inputPathOrString string) {
 
-	rssDataSlice = append(rssDataSlice, <-rssDataChan2...)
+			dataSlice, err := GetRSSFeeds(inputPathOrString)
 
-	erroFromChan1 := <-rssErrorChan1
-	erroFromChan2 := <-rssErrorChan2
+			if err != nil {
+				rssErrorChan <- fmt.Errorf("while fetching from %s <= %s", url, err.Error())
+				rssDataChan <- []RSSData{}
+				return
+			}
 
-	if erroFromChan1 != nil {
+			rssDataChan <- dataSlice
+			rssErrorChan <- nil
+			return
+		}(url)
 
-		log.Println("[ERROR] main() <= " + erroFromChan1.Error())
+		//Wait for Data and Error
+		rssDataSlice = append(rssDataSlice, <-rssDataChan...)
+		errorFromChan = <-rssErrorChan
 
 	}
 
-	if erroFromChan2 != nil {
+	if errorFromChan != nil {
 
-		log.Println("[ERROR] main() <= " + erroFromChan2.Error())
+		log.Println("[ERROR] main() " + errorFromChan.Error())
 
 	}
 

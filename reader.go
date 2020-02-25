@@ -60,7 +60,7 @@ func ReadAndParse(inputPathOrString string) (rssFeed []*gofeed.Item, err error) 
 //This function works with ReadAndParse() to parse the feeds
 //and then transFormRSSFeedToCustomData() to  transfrom the feed to the appropriate type.
 //It communicates through channels and is appropriate for running in a gouroutine
-func GetRSSFeeds(inputPathOrString string, dataChan chan<- []RSSData, errorChan chan<- error) {
+func GetRSSFeeds(inputPathOrString string) (data []RSSData, err error) {
 
 	innerWaitGroup := &sync.WaitGroup{}
 	RSSDataSlice := []RSSData{}
@@ -70,10 +70,8 @@ func GetRSSFeeds(inputPathOrString string, dataChan chan<- []RSSData, errorChan 
 	//if error occurs, send the error through the channel and close both error and data channels
 	if err != nil {
 
-		errorChan <- fmt.Errorf("[ERROR] GetRSSFeeds() with input string %s <= %s", inputPathOrString, err.Error())
-		close(errorChan)
-		close(dataChan)
-		return
+		return nil, fmt.Errorf("[ERROR] GetRSSFeeds() with input string %s <= %s", inputPathOrString, err.Error())
+
 	}
 
 	//channel for communicating with transFormRSSFeedToCustomData()
@@ -102,12 +100,7 @@ func GetRSSFeeds(inputPathOrString string, dataChan chan<- []RSSData, errorChan 
 	//wait for all goroutines to complete before sending the data through the channel and exiting
 	innerWaitGroup.Wait()
 
-	dataChan <- RSSDataSlice
-
-	//alert all receivers that no further data is to be sent
-	close(errorChan)
-	close(dataChan)
-	return
+	return RSSDataSlice, nil
 
 }
 
