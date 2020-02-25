@@ -69,9 +69,9 @@ func main() {
 		&algolia,
 	}
 
-	msql := MsqlConnection{}
+	// msql := MsqlConnection{}
 
-	msql.InitDatabseConnection()
+	// msql.InitDatabseConnection()
 
 	var errorFromChan error = nil
 	rssDataSlice := []RSSData{}
@@ -117,13 +117,13 @@ func main() {
 
 	// fmt.Println(rssDataSlice)
 
-	// err := algolia.AddRecords(rssDataSlice)
+	err := algolia.AddRecords(rssDataSlice)
 
-	// log.Println("Adding RSS records to database...")
+	log.Println("Adding RSS records to database...")
 
-	// if err != nil {
-	// 	log.Fatalln("[ERROR] main() <=", err.Error())
-	// }
+	if err != nil {
+		log.Fatalln("[ERROR] main() <=", err.Error())
+	}
 
 	//start the server
 	startServer()
