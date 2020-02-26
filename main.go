@@ -23,6 +23,7 @@ var app App
 
 var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to `file`")
 var memprofile = flag.String("memprofile", "", "write memory profile to `file`")
+var fetchrss = flag.Bool("fetchrss", false, "fetch rss feed and store in a database")
 
 func main() {
 
@@ -30,17 +31,19 @@ func main() {
 
 	//main program starts
 	// algolia := AlgoliaConnection{}
-
 	// algolia.InitDatabseConnection()
-
 	// app = App{
-
 	// 	&algolia,
 	// }
 
 	mysql := MsqlConnection{}
 
 	err := mysql.InitDatabseConnection()
+	app = App{
+		&mysql,
+	}
+
+	defer mysql.connection.Close()
 
 	if err != nil {
 
@@ -48,23 +51,45 @@ func main() {
 
 	}
 
-	defer mysql.connection.Close()
+	if *cpuprofile != "" || *memprofile != "" {
 
-	app = App{
+		createPerformanceProfile(cpuprofile, memprofile)
 
-		&mysql,
 	}
 
-	// msql := MsqlConnection{}
+	if *fetchrss {
+		RSSFeedUrls := []string{"http://feeds.bbci.co.uk/news/world/rss.xml", "http://rss.cnn.com/rss/edition_world.rss"}
 
-	// msql.InitDatabseConnection()
+		fetchRSSFeed(RSSFeedUrls)
+	}
+
+	//start the server
+	startServer()
+
+}
+
+//startServer initiates action to start the http server
+func startServer() {
+
+	http.HandleFunc(feedPath, app.handleFeedSearch)
+
+	log.Println("Starting server on port 8000...")
+
+	err := http.ListenAndServe("localhost:8000", nil)
+
+	if err != nil {
+		log.Fatalln("ListenAndServe:", err)
+	}
+
+}
+
+//fetchRSSFeed initiates  action for fetching RSS Feed
+func fetchRSSFeed(RSSFeedUrls []string) {
 
 	var errorFromChan error = nil
 	rssDataSlice := []RSSData{}
 	rssDataChan := make(chan []RSSData)
 	rssErrorChan := make(chan error)
-
-	RSSFeedUrls := [2]string{"http://feeds.bbci.co.uk/news/world/rss.xml", "http://rss.cnn.com/rss/edition_world.rss"}
 
 	log.Println("fetching RSS feed...")
 
@@ -101,42 +126,20 @@ func main() {
 
 	}
 
-	// fmt.Println(rssDataSlice)
-
-	//start the server
-	startServer()
+	storeRSSFeed(rssDataSlice)
 
 }
 
-func startServer() {
+//storeRSSFeed initiates action to store the RSS Feed in a database
+func storeRSSFeed(rssDataSlice []RSSData) {
 
-	http.HandleFunc(feedPath, app.handleFeedSearch)
-
-	log.Println("Starting server on port 8000...")
-
-	err := http.ListenAndServe("localhost:8000", nil)
-
-	if err != nil {
-		log.Fatalln("ListenAndServe:", err)
-	}
-
-}
-
-func fetchRSSFeed(RSSUrls []string) {
-
-}
-
-func storeRSSFeed(rssDataSlice []RSSData) (err error) {
-
-	err = app.DBAdapter.AddRecords(rssDataSlice)
+	err := app.DBAdapter.AddRecords(rssDataSlice)
 
 	log.Println("Adding RSS records to database...")
 
 	if err != nil {
-		return fmt.Errorf("[ERROR] main() <= %s", err.Error())
+		log.Println("[ERROR] main() <= " + err.Error())
 	}
-
-	return nil
 
 }
 
@@ -144,7 +147,7 @@ func storeRSSFeed(rssDataSlice []RSSData) (err error) {
 // We can generate this by running
 // `go test -cpuprofile cpu.prof2 -memprofile mem.prof2 -bench .` - to generate profiles, and then,
 // `go tool pprof --pdf ~/go/src/rss_web_app/cpu.prof2 > cpu.pdf2` - to convert profiles to pdf
-func createPerformanceProfile() {
+func createPerformanceProfile(cpuprofile *string, memprofile *string) {
 
 	if *cpuprofile != "" {
 		f, err := os.Create(*cpuprofile)

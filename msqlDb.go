@@ -39,7 +39,7 @@ func (msql *MsqlConnection) AddRecords(records []RSSData) (err error) {
 		return fmt.Errorf("[ERROR] MsqlConnection.AddRecords() : %s", err.Error())
 	}
 
-	fmt.Println("[MYSQL] Sucessfully added entries")
+	log.Println("[MYSQL] Sucessfully added entries")
 
 	return err
 
@@ -62,7 +62,6 @@ func (msql *MsqlConnection) SearchRecords(searchString string) (records []RSSDat
 		record := RSSData{}
 		var id int
 		var createdAt []uint8
-		fmt.Println(createdAt)
 		err = rows.Scan(&id, &record.Title, &record.Description, &record.Link, &createdAt)
 		if err != nil {
 			return nil, fmt.Errorf("[ERROR] MsqlConnection.SearchRecords() : %s", err.Error())
