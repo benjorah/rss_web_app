@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"rss_web_app/rssreader"
 )
 
 //handleFeedSearch is a handler for the `feeds` route of the API
@@ -41,7 +42,7 @@ func (app *App) handleFeedSearch(w http.ResponseWriter, r *http.Request) {
 
 //returnResponseJSON builds appropriate the response JSON object and sends it to the client.
 //All handlers should use this response while commmunicating with the client in order to keep things consistent
-func returnResponseJSON(data []RSSData, statusCode int, success bool, errorMessage string, w http.ResponseWriter) {
+func returnResponseJSON(data []rssreader.RSSData, statusCode int, success bool, errorMessage string, w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json")
 	var httpResponse HTTPResponse
 

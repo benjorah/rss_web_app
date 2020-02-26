@@ -8,6 +8,8 @@ import (
 	"net/http"
 	_ "net/http/pprof"
 	"os"
+	"rss_web_app/database"
+	"rss_web_app/rssreader"
 	"runtime"
 	"runtime/pprof"
 
@@ -36,14 +38,14 @@ func main() {
 	// 	&algolia,
 	// }
 
-	mysql := MsqlConnection{}
+	mysql := database.MsqlConnection{}
 
 	err := mysql.InitDatabseConnection()
 	app = App{
 		&mysql,
 	}
 
-	defer mysql.connection.Close()
+	defer mysql.GetConnectionObject().Close()
 
 	if err != nil {
 
@@ -87,8 +89,8 @@ func startServer() {
 func fetchRSSFeed(RSSFeedUrls []string) {
 
 	var errorFromChan error = nil
-	rssDataSlice := []RSSData{}
-	rssDataChan := make(chan []RSSData)
+	rssDataSlice := []rssreader.RSSData{}
+	rssDataChan := make(chan []rssreader.RSSData)
 	rssErrorChan := make(chan error)
 
 	log.Println("fetching RSS feed...")
@@ -101,11 +103,11 @@ func fetchRSSFeed(RSSFeedUrls []string) {
 		//we use an anonymous function to make GetRSSFeeds not depend on channels thereby making it more testable
 		go func(inputPathOrString string) {
 
-			dataSlice, err := GetRSSFeeds(inputPathOrString)
+			dataSlice, err := rssreader.GetRSSFeeds(inputPathOrString)
 
 			if err != nil {
 				rssErrorChan <- fmt.Errorf("while fetching from %s <= %s", url, err.Error())
-				rssDataChan <- []RSSData{}
+				rssDataChan <- []rssreader.RSSData{}
 				return
 			}
 
@@ -131,7 +133,7 @@ func fetchRSSFeed(RSSFeedUrls []string) {
 }
 
 //storeRSSFeed initiates action to store the RSS Feed in a database
-func storeRSSFeed(rssDataSlice []RSSData) {
+func storeRSSFeed(rssDataSlice []rssreader.RSSData) {
 
 	err := app.DBAdapter.AddRecords(rssDataSlice)
 

@@ -3,6 +3,7 @@ package main
 import (
 	"net/http"
 	"net/http/httptest"
+	"rss_web_app/rssreader"
 	"testing"
 )
 
@@ -11,12 +12,12 @@ type mockDBAdapter struct {
 	name string
 }
 
-func (mockDb *mockDBAdapter) AddRecords(records []RSSData) (err error) {
+func (mockDb *mockDBAdapter) AddRecords(records []rssreader.RSSData) (err error) {
 
 	return nil
 
 }
-func (mockDb *mockDBAdapter) SearchRecords(searchString string) (records []RSSData, err error) {
+func (mockDb *mockDBAdapter) SearchRecords(searchString string) (records []rssreader.RSSData, err error) {
 
 	return getSampleRSSDataSliceForHandler(), nil
 
