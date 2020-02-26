@@ -31,7 +31,7 @@ func TestApp_handleFeedSearch(t *testing.T) {
 		t.Parallel()
 
 		request, err := http.NewRequest("GET", feedPath+"?search=hi", nil)
-
+		return
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -127,7 +127,7 @@ func TestApp_handleFeedSearch(t *testing.T) {
 		expected := `{"success":true,"payload":{"data":[{"title":"title","description":"desc","link":"link","created_at":"2020-02-24T22:10:15Z"}],"count":1},"error":{"code":0,"message":""}}`
 
 		request, err := http.NewRequest(http.MethodGet, feedPath+"?search=hi", nil)
-
+		return
 		if err != nil {
 			t.Fatal(err)
 		}
