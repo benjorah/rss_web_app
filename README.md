@@ -70,7 +70,7 @@ go test -bench .
 We can generate memory and cpu profiles using the following command 
 
 ```
-go test -cpuprofile cpu.prof -memprofile mem.prof -bench .
+go test -cpuprofile rssreaderPkgCpu.prof -memprofile rssreaderPkgMem.prof -bench=. ./pathToPackage/...
 ```
 This creates/edits two files **cpu.prof** and **mem.prof**
 
@@ -80,6 +80,8 @@ To convert this files to pdf for easy viewing, run the follwoing 2 commands
 go tool pprof --pdf ~/path/to/project/cpu.prof > cpu.pdf
 go tool pprof --pdf ~/path/to/project/mem.prof > mem.pdf
 ```
+
+The memeory and cpu profile for the rssreader package have been generated and stored as rssreaderPkgMem.* and rssreaderPkgCpu.* respectively
 
 ## Built With
 
