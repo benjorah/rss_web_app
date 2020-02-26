@@ -135,9 +135,9 @@ func fetchRSSFeed(RSSFeedUrls []string) {
 //storeRSSFeed initiates action to store the RSS Feed in a database
 func storeRSSFeed(rssDataSlice []rssreader.RSSData) {
 
-	err := app.DBAdapter.AddRecords(rssDataSlice)
-
 	log.Println("Adding RSS records to database...")
+
+	err := app.DBAdapter.AddRecords(rssDataSlice)
 
 	if err != nil {
 		log.Println("[ERROR] main() <= " + err.Error())

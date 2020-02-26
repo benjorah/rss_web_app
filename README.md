@@ -35,14 +35,14 @@ Find a file named **schema.sql** and import into phpMydmin to create your databa
 Run the app to start the server with the following command (while in your project directory)
 
 ```
-./directoryName
+./rss_web_app
 ```
 
 To fetch the RSS feed before starting the server, start the app with the  following command ( you should do this the first time around in order to get some data in your database)
 
 
 ```
-./directoryName -fetchrss
+./rss_web_app -fetchrss
 ```
 
 #End with an example of getting some data out of the system or using it for a little demo
