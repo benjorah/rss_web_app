@@ -68,6 +68,14 @@ func (msql *MsqlConnection) SearchRecords(searchString string) (records []RSSDat
 			return nil, fmt.Errorf("[ERROR] MsqlConnection.SearchRecords() : %s", err.Error())
 		}
 
+		parsedTime, err := convertTimeToUTC(string(createdAt) + " +0000 UTC")
+
+		if err != nil {
+			return nil, fmt.Errorf("[ERROR] MsqlConnection.SearchRecords() : %s", err.Error())
+		}
+
+		record.CreatedAt = parsedTime
+
 		records = append(records, record)
 
 	}
@@ -102,35 +110,4 @@ func (msql *MsqlConnection) InitDatabseConnection() (err error) {
 
 	return nil
 
-}
-
-//CreateDatabase creates a new database
-func (msql *MsqlConnection) CreateDatabase() {
-	_, err := msql.connection.Exec("CREATE DATABASE " + goDotEnvVariable("MSQL_DBNAME"))
-	if err != nil {
-		fmt.Println("[MYSQL] Error creating databbase")
-	} else {
-		fmt.Println("[MYSQL] Successfully created database..")
-	}
-
-	_, err = msql.connection.Exec("USE " + goDotEnvVariable("MSQL_DBNAME"))
-	if err != nil {
-		fmt.Println(err.Error())
-	} else {
-		fmt.Println("DB selected successfully..")
-	}
-}
-
-//CreateDatabaseTable creates a new database table
-func (msql *MsqlConnection) CreateDatabaseTable() {
-	stmt, err := msql.connection.Prepare("CREATE Table feed(id int NOT NULL AUTO_INCREMENT, title varchar(100), description varchar(30),link varchar(50),created_at varchar(30) ,PRIMARY KEY (id));")
-	if err != nil {
-		fmt.Println(err.Error())
-	}
-	_, err = stmt.Exec()
-	if err != nil {
-		fmt.Println(err.Error())
-	} else {
-		fmt.Println("Table created successfully..")
-	}
 }
