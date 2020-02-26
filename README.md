@@ -13,80 +13,81 @@ git clone https://github.com/benjorah/rss_web_app.git
 ### Prerequisites
 
 To get the most out of the project, Go version 1.11 is required (due to go module support). The file go.mod also contains al;l the dependency for this project.
-For copnverting performance profiles to pdf, the 3rd party tool graphviz. Get this buy running the follwoing command if on a mac
+For copnverting performance profiles to pdf, the 3rd party tool **graphviz**. Get this buy running the follwoing command if on a mac
 ```
 brew install graphviz
 ```
-For full-text search support you would require MySQL 5.6 or higher installed. You can achive this by installing the MAMP server locally https://www.mamp.info/en/downloads/
+For full-text search support you would require MySQL 5.6 or higher installed. You can achive this by installing the **MAMP** server locally https://www.mamp.info/en/downloads/
 
 ### Installing
 
-A step by step series of examples that tell you how to get a development env running
-
-Say what the step will be
+Right after installing downloading the project, cd into your project folder, build the project (which also gets the required dependency) using the following command
 
 ```
-Give the example
+go build .
+```
+Make a copy of the **.env.example** and name it **.env** and fill with the required information.
+
+Start your local MAMP server and access to phpMydmin from your browser (usually found at http://localhost:8888/phpMyAdmin/).
+
+Find a file named **schema.sql** and import into phpMydmin to create your database and table
+
+Run the app to start the server with the following command (while in your project directory)
+
+```
+./directoryName
 ```
 
-And repeat
+To fetch the RSS feed before starting the server, start the app with the  following command ( you should do this the first time around in order to get some data in your database)
+
 
 ```
-until finished
+./directoryName -fetchrss
 ```
 
-End with an example of getting some data out of the system or using it for a little demo
+#End with an example of getting some data out of the system or using it for a little demo
 
 ## Running the tests
 
 Explain how to run the automated tests for this system
 
-### Break down into end to end tests
+### Running unit tests
 
-Explain what these tests test and why
-
-```
-Give an example
-```
-
-### And coding style tests
-
-Explain what these tests test and why
+To run the unit test in the system with the following command
 
 ```
-Give an example
+go test
 ```
 
-## Deployment
+### Running benchmark tests
 
-Add additional notes about how to deploy this on a live system
+This tests the efficiency of our function by calling it multiple times and recording the execution time. This gives a sense of how well we implement our functions
+
+```
+go test -bench .
+```
+
+We can generate memory and cpu profiles using the following command 
+
+```
+go test -cpuprofile cpu.prof -memprofile mem.prof -bench .
+```
+This creates/edits two files **cpu.prof** and **mem.prof**
+
+To convert this files to pdf for easy viewing, run the follwoing 2 commands
+
+```
+go tool pprof --pdf ~/path/to/project/cpu.prof > cpu.pdf
+go tool pprof --pdf ~/path/to/project/mem.prof > mem.pdf
+```
 
 ## Built With
 
-* [Dropwizard](http://www.dropwizard.io/1.0.2/docs/) - The web framework used
-* [Maven](https://maven.apache.org/) - Dependency Management
-* [ROME](https://rometools.github.io/rome/) - Used to generate RSS Feeds
+* [GoFeed](https://github.com/mmcdole/gofeed) - For parsing RSS
+* [Go-Sql-Driver](https://github.com/go-sql-driver/mysql) - An sql driver for Golang
 
-## Contributing
-
-Please read [CONTRIBUTING.md](https://gist.github.com/PurpleBooth/b24679402957c63ec426) for details on our code of conduct, and the process for submitting pull requests to us.
-
-## Versioning
-
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/your/project/tags). 
 
 ## Authors
 
-* **Billie Thompson** - *Initial work* - [PurpleBooth](https://github.com/PurpleBooth)
+* **Onwuorah Okechukwu** 
 
-See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
-
-## Acknowledgments
-
-* Hat tip to anyone whose code was used
-* Inspiration
-* etc

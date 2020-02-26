@@ -145,8 +145,8 @@ func storeRSSFeed(rssDataSlice []RSSData) {
 
 // This first two if blocks are used for genearting CPU and memory profiles for the application
 // We can generate this by running
-// `go test -cpuprofile cpu.prof2 -memprofile mem.prof2 -bench .` - to generate profiles, and then,
-// `go tool pprof --pdf ~/go/src/rss_web_app/cpu.prof2 > cpu.pdf2` - to convert profiles to pdf
+// `go test -cpuprofile cpu.prof -memprofile mem.prof -bench .` - to generate profiles, and then,
+// `go tool pprof --pdf ~/go/src/rss_web_app/cpu.prof > cpu.pdf` - to convert profiles to pdf
 func createPerformanceProfile(cpuprofile *string, memprofile *string) {
 
 	if *cpuprofile != "" {
