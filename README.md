@@ -12,7 +12,7 @@ git clone https://github.com/benjorah/rss_web_app.git
 
 ### Prerequisites
 
-To get the most out of the project, Go version 1.11 is required (due to go module support). The file go.mod also contains al;l the dependency for this project.
+To get the most out of the project, **Go** version 1.11 is required (due to go module support). The file go.mod also contains al;l the dependency for this project.
 For copnverting performance profiles to pdf, the 3rd party tool **graphviz**. Get this buy running the follwoing command if on a mac
 ```
 brew install graphviz
