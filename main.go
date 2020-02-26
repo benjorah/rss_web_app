@@ -60,13 +60,30 @@ func main() {
 	//Performance profile code ends here
 
 	//main program starts
-	algolia := AlgoliaConnection{}
+	// algolia := AlgoliaConnection{}
 
-	algolia.InitDatabseConnection()
+	// algolia.InitDatabseConnection()
+
+	// app = App{
+
+	// 	&algolia,
+	// }
+
+	mysql := MsqlConnection{}
+
+	err := mysql.InitDatabseConnection()
+
+	if err != nil {
+
+		log.Println("[ERROR] main() <= " + err.Error())
+
+	}
+
+	defer mysql.connection.Close()
 
 	app = App{
 
-		&algolia,
+		&mysql,
 	}
 
 	// msql := MsqlConnection{}
@@ -111,19 +128,19 @@ func main() {
 
 	if errorFromChan != nil {
 
-		log.Println("[ERROR] main() " + errorFromChan.Error())
+		log.Println("[ERROR] main() <= " + errorFromChan.Error())
 
 	}
 
 	// fmt.Println(rssDataSlice)
 
-	err := algolia.AddRecords(rssDataSlice)
+	// err = app.DBAdapter.AddRecords(rssDataSlice)
 
-	log.Println("Adding RSS records to database...")
+	// log.Println("Adding RSS records to database...")
 
-	if err != nil {
-		log.Fatalln("[ERROR] main() <=", err.Error())
-	}
+	// if err != nil {
+	// 	log.Println("[ERROR] main() <=", err.Error())
+	// }
 
 	//start the server
 	startServer()
