@@ -16,4 +16,4 @@ Score: 4/5 ==> Exceeds Expectations
 1. Tests done. No security enhancement
 
 # Summary
-## Overall Average Rating = 4.5/5 ==> Exceeds Expectations
+## Overall Average Rating = 4.3/5 ==> Exceeds Expectations
